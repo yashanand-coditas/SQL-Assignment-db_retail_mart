@@ -1,5 +1,31 @@
 --Advance SQL Assignment
 
+--Indexes
+1.
+CREATE INDEX idx_campaign_budget ON tbl_campaign(budget);
+--Reason:This index will speed up queries that involve filtering or sorting campaigns based on their budget, such as selecting campaigns with the highest and lowest budgets.
+2.
+CREATE INDEX idx_products_category ON tbl_products(category);
+--Reason:This index will enhance performance when calculating the average price of products across categories and ranking products based on total sales within each category.
+3.
+CREATE INDEX idx_orders_campaign ON tbl_orders(campaign_id);
+--Reason:This index will help in efficiently retrieving orders associated with each campaign, which is useful for calculating total revenue and average order amounts per campaign.
+4.
+CREATE INDEX idx_inventory_product ON tbl_inventory(product_id);
+--Reason:This index will facilitate quick lookups of stock quantities for products, especially when handling missing stock quantities and providing default values.
+5.
+CREATE INDEX idx_order_items_order ON tbl_order_items(order_id);
+--Reason:This index allows for quick access to order items associated with each order, which is important for analyzing total quantity and revenue generated from each product by customer.
+6.
+CREATE INDEX idx_orders_date_customer ON tbl_orders(order_date, customer_id);
+--Reason:This composite index will help optimize queries that analyze sales trends over time, such as evaluating growth rates of sales for each campaign.
+7.
+CREATE INDEX idx_customers_total_spent ON tbl_customers(total_spent);
+--Reason:This index supports the query to find the top  customers who consistently spend.
+8.
+CREATE INDEX idx_campaign_region ON tbl_campaign(region);
+--Reason:This index can help with partitioning the sales data to compare the performance of different regions.
+
 --1.Select the campaigns with the highest and lowest budgets.
 SELECT campaign_name, budget
 FROM tbl_campaign
