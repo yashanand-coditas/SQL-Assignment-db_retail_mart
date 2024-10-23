@@ -1,119 +1,238 @@
 -- Intermediate SQL Assignment
 
 --1.Number of orders per campaign, ordered by number of orders descending.
-SELECT campaign_id, COUNT(*) AS order_count
-FROM tbl_orders
-GROUP BY campaign_id
-ORDER BY order_count DESC;
+SELECT 
+    c.campaign_name, 
+    COUNT(o.order_id) AS order_count
+FROM 
+    tbl_campaign c
+JOIN 
+    tbl_orders o ON c.campaign_id = o.campaign_id
+GROUP BY 
+    c.campaign_name
+ORDER BY 
+    order_count DESC;
 
 --2.Average order amount for each campaign.
-SELECT campaign_id, AVG(total_amount)AS average_order_amount
-from tbl_orders
-group by campaign_id;
+SELECT 
+    c.campaign_name, 
+    AVG(o.total_amount) AS average_order_amount
+FROM 
+    tbl_campaign c
+JOIN 
+    tbl_orders o ON c.campaign_id = o.campaign_id
+GROUP BY 
+    c.campaign_name
+ORDER BY 
+    average_order_amount DESC;
 
 --3.Products ordered more than 100 times in total.
-SELECT product_id, SUM(quantity) as total_ordered
-FROM tbl_order_items
-GROUP BY product_id
-HAVING SUM(quantity)>100;
+SELECT 
+    oi.product_id, 
+    p.product_name,  
+    SUM(oi.quantity) AS total_ordered
+FROM 
+    tbl_order_items oi
+JOIN 
+    tbl_products p ON oi.product_id = p.product_id
+GROUP BY 
+    oi.product_id, 
+    p.product_name
+HAVING 
+    SUM(oi.quantity) > 100;
 
 --4.Total sales for each region, ordered by sales descending.
-SELECT region, SUM(total_amount) AS total_sales
-FROM tbl_orders
-JOIN tbl_campaign ON tbl_orders.campaign_id = tbl_campaign.campaign_id
-GROUP BY region
-ORDER BY total_sales DESC;
+SELECT 
+	region, SUM(total_amount) AS total_sales
+FROM 
+	tbl_orders
+RIGHT JOIN 
+	tbl_campaign ON tbl_orders.campaign_id = tbl_campaign.campaign_id
+GROUP BY 
+	region
+ORDER BY 
+	total_sales DESC;
 
 --5.Average amount spent per customer, ordered by average descending.
-SELECT customer_id, AVG(total_spent) AS average_spent
-FROM tbl_customers
-GROUP BY customer_id
-ORDER BY average_spent DESC;
+SELECT 
+	c.name AS customer_name,
+    o.customer_id,   
+    AVG(o.total_amount) AS average_spent
+FROM 
+    tbl_orders o
+JOIN 
+    tbl_customers c ON o.customer_id = c.customer_id
+GROUP BY 
+    o.customer_id, c.name  
+ORDER BY 
+    average_spent DESC;
 
 --6.Most popular product in each category.
-SELECT p.category, p.product_id, SUM(quantity) AS total_sold
-FROM tbl_order_items oi
-JOIN tbl_products p ON oi.product_id = p.product_id
-GROUP BY p.category, p.product_id
-ORDER BY total_sold DESC;
-
+WITH product_sales AS (
+    SELECT 
+		p.product_id,
+        p.category,  
+        p.product_name,  
+        SUM(oi.quantity) AS total_sold,
+        DENSE_RANK() OVER (PARTITION BY p.category ORDER BY SUM(oi.quantity) DESC) AS rank
+    FROM 
+        tbl_order_items oi
+    JOIN 
+        tbl_products p ON oi.product_id = p.product_id
+    GROUP BY 
+        p.category, p.product_id, p.product_name
+)
+SELECT 
+	product_id,
+    category,  
+    product_name,
+    total_sold
+FROM 
+    product_sales
+WHERE 
+    rank = 1;  
+ 
 --7.Total budget of all campaigns that have ended.
-SELECT SUM(budget) AS total_ended_budget
-FROM tbl_campaign
-WHERE end_date < CURRENT_DATE;
+SELECT 
+	SUM(budget) AS total_ended_budget
+FROM 
+	tbl_campaign
+WHERE 
+	end_date < CURRENT_DATE;
 
 --8.Order details along with campaign names.
-SELECT o.*, c.campaign_name
-FROM tbl_orders o
-JOIN tbl_campaign c ON o.campaign_id = c.campaign_id;
+SELECT 
+	o.*, c.campaign_name
+FROM 
+	tbl_orders o
+JOIN 
+	tbl_campaign c ON o.campaign_id = c.campaign_id;
 
 --9.Product details for each order item.
-SELECT oi.*, p.product_name
-FROM tbl_order_items oi
-JOIN tbl_products p ON oi.product_id = p.product_id;
+SELECT 
+    oi.*,  
+    p.product_name
+FROM 
+    tbl_order_items oi
+JOIN 
+    tbl_products p ON oi.product_id = p.product_id;
 
 --10.Total revenue per campaign.
-SELECT campaign_id, SUM(total_amount) AS total_revenue
-FROM tbl_orders
-GROUP BY campaign_id;
+SELECT 
+    json_build_object(
+        'campaign_id', c.campaign_id,
+        'campaign_name', c.campaign_name,
+        'total_revenue', COALESCE(SUM(o.total_amount), 0)
+    ) AS campaign_revenue
+FROM 
+    tbl_campaign c
+LEFT JOIN 
+    tbl_orders o ON o.campaign_id = c.campaign_id
+GROUP BY 
+    c.campaign_id, c.campaign_name
+ORDER BY 
+    c.campaign_id;
+
 
 --11.Total number of orders placed per region.
-SELECT region, COUNT(*) AS order_count
-FROM tbl_orders o
-JOIN tbl_campaign c ON o.campaign_id = c.campaign_id
-GROUP BY region;
+SELECT 
+	region, COUNT(*) AS order_count
+FROM 
+	tbl_orders o
+JOIN 
+	tbl_campaign c ON o.campaign_id = c.campaign_id
+GROUP BY 
+	region;
 
 --12.Total amount spent by each customer on each campaign.
-SELECT customer_id, campaign_id, SUM(total_amount) AS total_spent
-FROM tbl_orders
-GROUP BY customer_id, campaign_id;
+SELECT 
+	customer_id, campaign_id, SUM(total_amount) AS total_spent
+FROM 
+	tbl_orders
+GROUP BY 
+	customer_id, campaign_id
+order by customer_id, campaign_id;
 
 --13.Average budget of all campaigns, grouped by region.
-SELECT region, AVG(budget) AS average_budget
-FROM tbl_campaign
-GROUP BY region;
+SELECT 
+	region, AVG(budget) AS average_budget
+FROM 
+	tbl_campaign
+GROUP BY 
+	region;
 
 --14.Filter campaigns with total spending greater than their budget using a sub-query.
 SELECT *
-FROM tbl_campaign c
-WHERE (SELECT SUM(total_amount) FROM tbl_orders o WHERE o.campaign_id = c.campaign_id) > c.budget;
+FROM 
+	tbl_campaign c
+WHERE 
+	(SELECT SUM(total_amount) FROM tbl_orders o WHERE o.campaign_id = c.campaign_id) > c.budget;
 
 --15.Total quantity sold and average price per product.
-SELECT p.product_id, SUM(oi.quantity) AS total_quantity_sold, AVG(oi.price) AS average_price
-FROM tbl_order_items oi
-JOIN tbl_products p ON p.product_id = oi.product_id
-GROUP BY p.product_id;
+SELECT 	
+	p.product_id,p.product_name, SUM(oi.quantity) AS total_quantity_sold, AVG(oi.price) AS average_price
+FROM 
+	tbl_order_items oi
+JOIN 
+	tbl_products p ON p.product_id = oi.product_id
+GROUP BY 
+	p.product_id;
 
 --16.Total quantity sold per product.
-SELECT product_id, SUM(quantity) AS total_quantity_sold
-FROM tbl_order_items
-GROUP BY product_id;
+SELECT 
+    p.product_id, 
+    p.product_name,  
+    SUM(oi.quantity) AS total_quantity_sold
+FROM 
+    tbl_order_items oi
+JOIN 
+    tbl_products p ON oi.product_id = p.product_id
+GROUP BY 
+    p.product_id, p.product_name;
+
 
 --17.Campaigns with average order amount greater than $200.
-SELECT campaign_id, AVG(total_amount) AS average_order_amount
-FROM tbl_orders
-GROUP BY campaign_id
-HAVING AVG(total_amount) > 200;
+SELECT 
+	campaign_id, AVG(total_amount) AS average_order_amount
+FROM 
+	tbl_orders
+GROUP BY 
+	campaign_id
+HAVING 
+	AVG(total_amount) > 200;
 
 --18.Top 10 products with highest total sales amount, ordered by sales descending.
-SELECT p.product_id, SUM(oi.quantity * oi.price) AS total_sales
-FROM tbl_order_items oi
-JOIN tbl_products p ON oi.product_id = p.product_id
-GROUP BY p.product_id
-ORDER BY total_sales DESC
+SELECT 
+	p.product_id,p.product_name, SUM(oi.quantity * oi.price) AS total_sales
+FROM 
+	tbl_order_items oi
+JOIN 
+	tbl_products p ON oi.product_id = p.product_id
+GROUP BY 
+	p.product_id
+ORDER BY 
+	total_sales DESC
 LIMIT 10;
 
 --19.Products with less than 20 units in stock, ordered by stock quantity.
-SELECT p.product_id, p.product_name, i.stock_quantity
-FROM tbl_products p
-JOIN tbl_inventory i ON p.product_id = i.product_id
-WHERE i.stock_quantity < 20
-ORDER BY i.stock_quantity;
+SELECT 
+	p.product_id, p.product_name, i.stock_quantity
+FROM 
+	tbl_products p
+JOIN 
+	tbl_inventory i ON p.product_id = i.product_id
+WHERE 
+	i.stock_quantity < 20
+ORDER BY 
+	i.stock_quantity;
 
 --20.Customers who spent more than the average amount spent per customer in the last 6 months.
-SELECT DISTINCT customer_id
-FROM tbl_customers
-WHERE total_spent > (SELECT AVG(total_spent) FROM tbl_customers WHERE join_date >= CURRENT_DATE - INTERVAL '6 months');
+SELECT DISTINCT 
+	customer_id, name
+FROM 
+	tbl_customers
+WHERE 
+	total_spent > (SELECT AVG(total_spent) FROM tbl_customers WHERE join_date >= CURRENT_DATE - INTERVAL '6 months');
 
 ------------------------------------------------------------------------------------------------------------------------
 ------------Analysis Inference from RetailMart's Campaign--------------------------------

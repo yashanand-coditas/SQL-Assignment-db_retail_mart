@@ -47,7 +47,7 @@
 
 ---
 #### 11.Active Customers 
--The total number of customers who have made at least one purchase reveals the breadth of our customer base and can inform customer retention strategies.
+- The total number of customers who have made at least one purchase reveals the breadth of our customer base and can inform customer retention strategies.
 
 ---
 #### 12.High-Spending Customers 

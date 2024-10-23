@@ -147,47 +147,95 @@ CREATE TABLE tbl_inventory (
 --Basic SQL Assignment
 
 --1.Select all campaigns that are currently active.
-SELECT * FROM tbl_campaign WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE;
+SELECT
+	* 
+FROM 
+	tbl_campaign WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE;
 
 --2.Select all customers who joined after January 1, 2023.
-SELECT * FROM tbl_customers WHERE join_date > '2023-01-01';
+SELECT
+	* 
+FROM 
+	tbl_customers WHERE join_date > '2023-01-01';
 
 --3.Select the total amount spent by each customer, ordered by amount in descending order.
-SELECT name,total_spent
-FROM tbl_customers 
-ORDER BY total_spent DESC;
+SELECT 
+	name,total_spent
+FROM 
+	tbl_customers 
+ORDER BY 
+	total_spent DESC;
 
 --4.Select the products with a price greater than $50.
-SELECT * FROM tbl_products 
-WHERE price>50;
+SELECT 
+	* 
+FROM 
+	tbl_products 
+WHERE 
+	price>50;
 
 --5.Select the number of orders placed in the last 30 days.
-SELECT COUNT(*) FROM tbl_orders WHERE order_date >= CURRENT_DATE-INTERVAL'30 days';
+SELECT 
+	COUNT(*) 
+FROM 
+	tbl_orders WHERE order_date >= CURRENT_DATE-INTERVAL'30 days';
 
 --6.Order the products by price in ascending order and limit the results to the top 5 most affordable products.
-SELECT * FROM tbl_products
-ORDER BY price ASC LIMIT 5;
+SELECT 
+	* 
+FROM 
+	tbl_products
+ORDER BY 
+	price ASC LIMIT 5;
 
 --7.Select the campaign names and their budgets.
-SELECT campaign_name, budget FROM tbl_campaign;
+SELECT 
+	campaign_name, budget 
+FROM 
+	tbl_campaign;
 
 --8.Select the total quantity sold for each product, ordered by quantity sold in descending order.
-SELECT product_id, SUM(quantity)AS total_sold
-FROM tbl_order_items
-GROUP BY product_id
-ORDER BY total_sold DESC;
+SELECT 
+    p.product_id, 
+    p.product_name, 
+    SUM(oi.quantity) AS total_sold
+FROM 
+    tbl_order_items oi
+JOIN 
+    tbl_products p ON oi.product_id = p.product_id
+GROUP BY 
+    p.product_id, p.product_name
+ORDER BY 
+    total_sold DESC;
+
 
 --9.Select the details of orders that have a total amount greater than $100.
-SELECT * FROM tbl_orders WHERE total_amount >100;
+SELECT 
+	* 
+FROM 
+	tbl_orders WHERE total_amount >100;
 
 --10.Find the total number of customers who have made at least one purchase.
-SELECT COUNT(DISTINCT customer_id) FROM tbl_orders;
+SELECT
+	COUNT(DISTINCT customer_id) 
+FROM 
+	tbl_orders;
 
 --11.Select the top 3 campaigns with the highest budgets.
-SELECT campaign_name, budget FROM tbl_campaign ORDER BY budget DESC LIMIT 3;
+SELECT 
+	campaign_name, budget 
+FROM 
+	tbl_campaign 
+ORDER BY 
+	budget DESC LIMIT 3;
 
 --12.Select the top 5 customers with the highest total amount spent.
-SELECT customer_id, total_spent FROM tbl_customers ORDER BY total_spent DESC LIMIT 5;
+SELECT 
+	customer_id, total_spent 
+FROM 
+	tbl_customers 
+ORDER BY 
+	total_spent DESC LIMIT 5;
 
 ---------------------------------------------------------------------------------------
 
